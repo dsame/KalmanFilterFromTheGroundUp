@@ -1,13 +1,17 @@
 ---
 title: "Kalman Filter From The Ground Up"
 author: "Sergey Dolin"
-format: html
+format: pdf
 editor: visual
 ---
 
 ```{r setup, include=FALSE}
 library(tidyverse)
 library(scales)
+```
+
+```{r}
+#| echo: false
 ```
 
 ## ESSENTIAL BACKGROUND
@@ -71,32 +75,46 @@ Final plot
 ```{r}
 ggplot() +
   labs(x = "measurements", y= "height,m") +
-  geom_point(data = data.frame(teamA), aes(x = 1:length(teamA), y = teamA, color = "Team A")) +
-  geom_point(data = data.frame(teamB), aes(x = 1:length(teamB), y = teamB, color = "Team B")) +
-  geom_hline(yintercept = meanTeamA, color = "red", linetype ="dashed") +
-  geom_hline(yintercept = meanTeamB, color = "blue", linetype ="longdash") +
-  geom_hline(yintercept = meanTeamA + standardDeviationTeamA, color = "red", linetype = "dashed") +
-  geom_hline(yintercept = meanTeamA - standardDeviationTeamA, color = "red", linetype = "dashed") +
-  geom_hline(yintercept = meanTeamB + standardDeviationTeamB, color = "blue", linetype = "dashed") +
-  geom_hline(yintercept = meanTeamB - standardDeviationTeamB, color = "blue", linetype = "dashed")
+  geom_point(data = data.frame(teamA), 
+             aes(x = 1:length(teamA), y = teamA, color = "Team A")) +
+  geom_point(data = data.frame(teamB), 
+             aes(x = 1:length(teamB), y = teamB, color = "Team B")) +
+  geom_hline(yintercept = meanTeamA, 
+             color = "red", linetype ="dashed") +
+  geom_hline(yintercept = meanTeamB, 
+             color = "blue", linetype ="longdash") +
+  geom_hline(yintercept = meanTeamA + standardDeviationTeamA, 
+             color = "red", linetype = "dashed") +
+  geom_hline(yintercept = meanTeamA - standardDeviationTeamA, 
+             color = "red", linetype = "dashed") +
+  geom_hline(yintercept = meanTeamB + standardDeviationTeamB, 
+             color = "blue", linetype = "dashed") +
+  geom_hline(yintercept = meanTeamB - standardDeviationTeamB, 
+             color = "blue", linetype = "dashed")
   
 ```
 
 ### NORMAL DISTRIBUTION
 
-Geneatte a normal distribution with mean 0 and standard deviation 1
+Generate a normal distribution with mean 0 and standard deviation 1
 
 ```{r}
 data <- rnorm(10000, mean = 0, sd = 1)
-
+#, μ = 0, σ = 1 
 ggplot() +
-  labs(x = "random attempt", y= "randoms, μ = 0, σ = 1") +
-  geom_point(data = data.frame(data), aes(x = 1:length(data), y = data)) +
-  geom_hline(yintercept = mean(data), color = "red", linetype ="dashed") +
-  geom_hline(yintercept = mean(data) + sd(data), color = "red", linetype = "dashed") +
-  geom_hline(yintercept = mean(data) - sd(data), color = "red", linetype = "dashed") +
-  geom_hline(yintercept = mean(data) + var(data), color = "blue", linetype = "dashed") +
-  geom_hline(yintercept = mean(data) - var(data), color = "blue", linetype = "dashed")
+  labs(x = "random attempts", y= expression("randoms" ~ mu ~"= 0," ~ sigma ~"= 1")) +
+  geom_point(data = data.frame(data), 
+             aes(x = 1:length(data), y = data)) +
+  geom_hline(yintercept = mean(data), 
+             color = "red", linetype ="dashed") +
+  geom_hline(yintercept = mean(data) + sd(data), 
+             color = "red", linetype = "dashed") +
+  geom_hline(yintercept = mean(data) - sd(data), 
+             color = "red", linetype = "dashed") +
+  geom_hline(yintercept = mean(data) + var(data), 
+             color = "blue", linetype = "dashed") +
+  geom_hline(yintercept = mean(data) - var(data), 
+             color = "blue", linetype = "dashed")
 ```
 
 Plot distribution density with library function geom_density
@@ -121,8 +139,10 @@ dencity <- function(x) {
 dencityData <- dencity(data)
 ggplot() +
   labs(x = "value", y= "density") +
-  geom_point(data = data.frame(data, dencityData), aes(x = data, y = dencityData), color = "red")+
-  geom_density(data = data.frame(data), aes(x = data))
+  geom_point(data = data.frame(data, dencityData), 
+             aes(x = data, y = dencityData), color = "red")+
+  geom_density(data = data.frame(data), 
+               aes(x = data))
 ```
 
 Map each data to count of data rounded to 2 decimal places
@@ -150,17 +170,21 @@ measurements <- c(996,	994,	1021,	1000,	1002,	1010,	983,	971,	993,	1023)
 ggplot() +
   labs(x = "measurements", y= "gramms") +
   scale_x_continuous( breaks=pretty_breaks()) +
-  geom_point(data = data.frame(measurements), aes(x = 1:length(measurements), y = measurements)) +
-  geom_hline(yintercept = mean(measurements), color = "red", linetype ="solid") +
-  geom_hline(yintercept = mean(measurements) + sd(measurements), color = "red", linetype = "dashed") +
-  geom_hline(yintercept = mean(measurements) - sd(measurements), color = "red", linetype = "dashed")
+  geom_point(data = data.frame(measurements), 
+             aes(x = 1:length(measurements), y = measurements)) +
+  geom_hline(yintercept = mean(measurements), 
+             color = "red", linetype ="solid") +
+  geom_hline(yintercept = mean(measurements) + sd(measurements), 
+             color = "red", linetype = "dashed") +
+  geom_hline(yintercept = mean(measurements) - sd(measurements), 
+             color = "red", linetype = "dashed")
 ```
 
-
 *Dynamic model* of the system
-$$
+
+\begin{equation}
 x_{n+1} = x_{n}
-$$
+\end{equation}
 
 ```{r}
 
@@ -175,10 +199,12 @@ dynamicModel <- function(x_n) {
 ```
 
 *State Update Equation*
-$$
+
+\begin{equation}
 x_{n} = x_{n-1} + \alpha(z_n - x_{n-1})
-$$
-where $\alpha=\frac{1}{n}$ 
+\end{equation}
+
+where $\alpha=\frac{1}{n}$
 
 ```{r}
 #' @description State Update Equation
@@ -194,7 +220,7 @@ stateEquation <- function(n, x_n_1, z_n) {
 }
 ```
 
-The Filter ($\alpha$, $\beta$ often are replaced with ``g`` and ``h``)
+The Filter ($\alpha$, $\beta$ often are replaced with `g` and `h`)
 
 ```{r}
 
@@ -229,15 +255,24 @@ estimations <- filterG(measurements[c(1)], measurements)
 ggplot() +
   labs(x = "measurements", y= "gramms") +
   scale_x_continuous( breaks=pretty_breaks()) +
-  geom_line(data = data.frame(measurements), aes(x = 1:length(measurements), y = measurements)) +
-  geom_hline(yintercept = mean(measurements), linetype = "longdash") +
-  geom_hline(yintercept = mean(measurements) + sd(measurements), linetype = "dashed") +
-  geom_hline(yintercept = mean(measurements) - sd(measurements), linetype = "dashed") +
-  geom_line(data = data.frame(estimations), aes(x = 1:length(estimations), y = estimations), color = "red")+
-  geom_hline(yintercept = mean(estimations), color = "red", linetype = "longdash") +
-  geom_hline(yintercept = mean(estimations) + sd(estimations), color = "red", linetype = "dashed") +
-  geom_hline(yintercept = mean(estimations) - sd(estimations),  color = "red", linetype = "dashed")
+  geom_line(data = data.frame(measurements), 
+            aes(x = 1:length(measurements), y = measurements)) +
+  geom_hline(yintercept = mean(measurements), 
+             linetype = "longdash") +
+  geom_hline(yintercept = mean(measurements) + sd(measurements), 
+             linetype = "dashed") +
+  geom_hline(yintercept = mean(measurements) - sd(measurements), 
+             linetype = "dashed") +
+  geom_line(data = data.frame(estimations), 
+            aes(x = 1:length(estimations), y = estimations), color = "red")+
+  geom_hline(yintercept = mean(estimations), 
+             color = "red", linetype = "longdash") +
+  geom_hline(yintercept = mean(estimations) + sd(estimations), 
+             color = "red", linetype = "dashed") +
+  geom_hline(yintercept = mean(estimations) - sd(estimations),  
+             color = "red", linetype = "dashed")
 ```
+
 ### Constant Velocity
 
 We assume an aircraft that is moving radially away from the radar (or towards the radar).
@@ -245,35 +280,40 @@ We assume an aircraft that is moving radially away from the radar (or towards th
 Collection of measurements
 
 ```{r}
-measurements <- c(30171,	30353,	30756,	30799,	31018,	31278,	31276,	31379,	31748,	32175)
+measurements <- c(30171,	30353,	30756,	30799,	31018,	31278,	31276,	31379,
+                  31748,	32175)
 
 ggplot() +
   labs(x = "measurements", y= "feets") +
   scale_x_continuous( breaks=pretty_breaks()) +
   scale_x_continuous(breaks = pretty_breaks()) +
-  geom_point(data = data.frame(measurements), aes(x = 1:length(measurements), y = measurements)) +
-  geom_hline(yintercept = mean(measurements), color = "red", linetype ="solid") +
-  geom_hline(yintercept = mean(measurements) + sd(measurements), color = "red", linetype = "dashed") +
-  geom_hline(yintercept = mean(measurements) - sd(measurements), color = "red", linetype = "dashed")
+  geom_point(data = data.frame(measurements), 
+             aes(x = 1:length(measurements), y = measurements)) +
+  geom_hline(yintercept = mean(measurements), 
+             color = "red", linetype ="solid") +
+  geom_hline(yintercept = mean(measurements) + sd(measurements), 
+             color = "red", linetype = "dashed") +
+  geom_hline(yintercept = mean(measurements) - sd(measurements), 
+             color = "red", linetype = "dashed")
 ```
-
 
 If $x$ - is range,then velocity $\dot{x}$ can be a derivative of the range :
 
-$$
-\dot{x}=v=\frac{dx}{dt}
-$$
+\begin{equation}
+\dot{x}=v=\frac{dx}{dt} \\end{equation}
+\end{equation}
+
 *Dynamic model* (also called *State Extrapolation Equation* or *Transition Equation* or a *Prediction Equation*):
-$$
+
 \begin{equation}
 \begin{cases}
 x_{n+1} = x_n + \Delta t \dot{x}_n\\
 \dot{x}_{n+1} = \dot{x}_n\\
 \end{cases}
 \end{equation}
-$$
-In the matrix form:
-$$
+
+In the matrix form: 
+
 \begin{equation}
 \begin{pmatrix}
 x\\
@@ -288,7 +328,7 @@ x_n \\
 \dot{x}_n
 \end{pmatrix}
 \end{equation}
-$$
+
 ```{r}
 
 #' @description  dynamic model of the system
@@ -303,21 +343,25 @@ dynamicModel <- function(dt, x_n) {
 }
 ```
 
-Let's $z_n$ be a measurement at the $\Delta t$ time interval. Then the state update equation for velocity can be written as:
-$$
-\hat{\dot{x}} = \hat{\dot{x}}_{n-1} - \beta(\frac{z_n - \hat{x}_{n-1}}{\Delta t})
-$$
-where $\hat{\dot{x}}$ is the estimated state and $\beta$ is the weighting factor to scale the impact of the new measurement. 
+Let's $z_n$ be a measurement at the $\Delta t$ time interval. Then the state update equation for velocity can be written as: 
+
+\begin{equation}
+\hat{\dot{x}}=\hat{\dot{x}}_{n-1} - \beta(\frac{z_n - \hat{x}_{n-1}}{\Delta t})
+\end{equation}
+
+where $\hat{\dot{x}}$ is the estimated state and $\beta$ is the weighting factor to scale the impact of the new measurement.
 
 And the *state update equation* for position can be written as:
 
-$$
+\begin{equation}
 \hat{x} = \hat{x}_{n-1} + \alpha(z_n - \hat{x}_{n-1} )
-$$
-where $\alpha$ is the weighting factor to scale the impact of the new measurement. 
+\end{equation} 
 
-Unlike the "Weighting the Gold Price" example $\alpha$ is constant and depends on
-the measurement precision.
+where $\alpha$ is the weighting factor to scale the impact of the new measurement.
+
+where $\alpha$ is the weighting factor to scale the impact of the new measurement.
+
+Unlike the "Weighting the Gold Price" example $\alpha$ is constant and depends onthe measurement precision.
 
 ```{r}
 #' @description State Update Equation
@@ -376,8 +420,10 @@ estimationsV <- unlist(sapply(estimations, function(x) x[2]))
 ggplot() +
   labs(x = "measurements", y= "feets") +
   scale_x_continuous( breaks=pretty_breaks()) +
-  geom_line(data = data.frame(measurements), aes(x = 1:length(measurements), y = measurements)) +
-  geom_line(data = data.frame(estimationsX), aes(x = 1:length(estimationsX), y = estimationsX), color = "red")
+  geom_line(data = data.frame(measurements), 
+            aes(x = 1:length(measurements), y = measurements)) +
+  geom_line(data = data.frame(estimationsX), 
+            aes(x = 1:length(estimationsX), y = estimationsX), color = "red")
 
 
 ```
@@ -393,8 +439,10 @@ estimationsV <- unlist(sapply(estimations, function(x) x[2]))
 ggplot() +
   labs(x = "measurements", y= "feets") +
   scale_x_continuous( breaks=pretty_breaks()) +
-  geom_line(data = data.frame(measurements), aes(x = 1:length(measurements), y = measurements)) +
-  geom_line(data = data.frame(estimationsX), aes(x = 1:length(estimationsX), y = estimationsX), color = "red")
+  geom_line(data = data.frame(measurements), 
+            aes(x = 1:length(measurements), y = measurements)) +
+  geom_line(data = data.frame(estimationsX), 
+            aes(x = 1:length(estimationsX), y = estimationsX), color = "red")
 
 
 ```
