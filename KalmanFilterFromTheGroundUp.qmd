@@ -2,7 +2,6 @@
 title: "Kalman Filter From The Ground Up"
 author: "Sergey Dolin"
 format: pdf
-editor: visual
 ---
 
 ```{r setup, include=FALSE}
@@ -10,9 +9,9 @@ library(tidyverse)
 library(scales)
 ```
 
-```{r}
-#| echo: false
-```
+  This is a R-Lab to reproduce the equations and plots
+  from "Kalman Filter From The Ground Up" by Phil Kim.
+<a href="https://www.kalmanfilter.net">https://www.kalmanfilter.net</a>
 
 ## ESSENTIAL BACKGROUND
 
